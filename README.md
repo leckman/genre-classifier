@@ -18,5 +18,6 @@ Right click on ```classify.py``` and follow Properties > Permissions > Exectue
 Then run ```./classify.py --books="<bookfile.json>" --genres="<genrefile.csv>"```
 
 ###Optional Arguments
--s     save classification output
--h     help: show usage information
+-s: save classification output
+
+-h: help, show usage information
