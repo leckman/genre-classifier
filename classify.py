@@ -5,7 +5,12 @@ import json, csv
 import numpy as np
 
 def classify(books, genre_info):
-    """TODO docstring"""
+    """Return matching genres for book descriptions with associated scores.
+
+    Keyword arguments:
+    books -- json file path with {title: BOOK_TITLE, description: BOOK_DESCRIPTION} entries
+    genre_info -- csv file path with [genre_name, keyword, keyword_score] rows
+    """
     books = getJSON(books)
     genres = getCSV(genre_info)
     output = []
@@ -21,8 +26,8 @@ def classify(books, genre_info):
 
             num = getMatches(desc, search)
             if num > 0:
-                # matches of form [genre, points, numOccurences]
-                matches.append([genre[0], int(genre[2]), num])
+                # matches of form (genre, points, numOccurences)
+                matches.append((genre[0], int(genre[2]), num))
 
         # group matches by genre
         grouped = {}
@@ -48,20 +53,31 @@ def classify(books, genre_info):
     return output
 
 def getMatches(string, search_string):
+    """ Return number of nonoverlapping occurences of search_string in string """
     numMatches = 0
     i = 0
 
     while i < len(string):
         start = (string[i:]).find(search_string)
         if start > -1:
-            i += start + len(search_string)
+            i += start + len(search_string) # move i to end of search_string
             numMatches += 1
         else:
+            # no more instances of search_string
             break
 
     return numMatches
 
 def groupGenres(match, store):
+    """ Add a given genre match to the dictionary of genre matches
+
+    Keywork arguments:
+    match -- (genre_name, points_for_match, num_matches) 
+              tuple for a given keyword match
+    store -- dictionary with genre_name keys
+
+    Modifies the input store
+    """
     genre = match[0]
     if genre in store.keys():
         store[genre]["points"].append(match[1])
@@ -73,6 +89,7 @@ def groupGenres(match, store):
         }        
 
 def getJSON(file_name):
+    """ Load json from file """
     try:
         json_data = json.load(open(file_name));
         return json_data
@@ -82,6 +99,7 @@ def getJSON(file_name):
 
 
 def getCSV(file_name):
+    """ Load csv data from file as a 2D array """ 
     try:
         csv_data = csv.reader(open(file_name))
         data = []
@@ -93,6 +111,7 @@ def getCSV(file_name):
         sys.exit(1)
 
 def prettyPrint(classification_data):
+    """ Print human-readable classification data string """
     output = ""
     for book in classification_data:
         output += book["title"] + "\n"
@@ -101,7 +120,6 @@ def prettyPrint(classification_data):
         output += "\n"  # extra line break between books
     output = output[:-2] # remove last two newlines
     print output
-    return output
 
 if __name__ == '__main__':
 
@@ -110,18 +128,26 @@ if __name__ == '__main__':
     genres = "sample_genres.csv"
     save = False
 
+    help_message = "Usage: ./classify.py --books=<bookFileName.json> --genres=<genreFileName.csv>\n" \
+        "Optional flags:\n" \
+        "-s\tsave output\n" \
+        "-h\thelp"
+
     try:
-        opts, args = getopt.getopt(sys.argv[1:], ":s", ["books=", "genres="])
+        opts, args = getopt.getopt(sys.argv[1:], ":sh", ["books=", "genres="])
     except getopt.GetoptError as err:
-        print err
+        print help_message
         sys.exit(2) # argument error
 
     for opt, arg in opts:
+        if opt == "-h":
+            print help_message
+            sys.exit(0)
         if opt == "--books":
             books = arg
         if opt == "--genres":
             genres = arg
-        if opt =="-s":
+        if opt == "-s":
             save = True
 
     if (books == "sample_books.json" 
@@ -133,7 +159,7 @@ if __name__ == '__main__':
     prettyPrint(classified)
 
     if save: 
-        name = raw_input("Save to: ")
+        name = raw_input("\nSave to: ")
         if name.find(".") == -1:
             # no file extension specified
             name += ".json"
