@@ -45,7 +45,7 @@ def classify(books, genre_info):
             final_classifications["scores"][genre] = score
         output.append(final_classifications)
 
-    return json.dumps(output)
+    return output
 
 def getMatches(string, search_string):
     numMatches = 0
@@ -92,6 +92,17 @@ def getCSV(file_name):
         print err
         sys.exit(1)
 
+def prettyPrint(classification_data):
+    output = ""
+    for book in classification_data:
+        output += book["title"] + "\n"
+        for genre in book["scores"].keys():
+            output += "%s, %d\n" % (genre, book["scores"][genre])
+        output += "\n"  # extra line break between books
+    output = output[:-2] # remove last two newlines
+    print output
+    return output
+
 if __name__ == '__main__':
 
     # defaults
@@ -103,7 +114,7 @@ if __name__ == '__main__':
         opts, args = getopt.getopt(sys.argv[1:], ":s", ["books=", "genres="])
     except getopt.GetoptError as err:
         print err
-        sys.exit(2)
+        sys.exit(2) # argument error
 
     for opt, arg in opts:
         if opt == "--books":
@@ -119,11 +130,15 @@ if __name__ == '__main__':
 
     print "[INFO] Classifying books from %s using %s." % (books, genres)
     classified = classify(books, genres)
-    print classified
+    prettyPrint(classified)
 
     if save: 
         name = raw_input("Save to: ")
+        if name.find(".") == -1:
+            # no file extension specified
+            name += ".json"
         output = open(name, "w")
-        output.write(classified)
+        json.dump(classified, output)
         output.close()
+        print "[INFO] Saved classification data to", name
 
