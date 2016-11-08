@@ -3,6 +3,7 @@
 import getopt, sys
 import json, csv
 import numpy as np
+import re
 
 def classify(books, genre_info):
     """Return matching genres for book descriptions with associated scores.
@@ -54,19 +55,9 @@ def classify(books, genre_info):
 
 def getMatches(string, search_string):
     """ Return number of nonoverlapping occurences of search_string in string """
-    numMatches = 0
-    i = 0
-
-    while i < len(string):
-        start = (string[i:]).find(search_string)
-        if start > -1:
-            i += start + len(search_string) # move i to end of search_string
-            numMatches += 1
-        else:
-            # no more instances of search_string
-            break
-
-    return numMatches
+    pattern = re.compile('(%s)' % search_string)
+    matches = re.findall(pattern, string)
+    return len(matches)
 
 def groupGenres(match, store):
     """ Add a given genre match to the dictionary of genre matches
